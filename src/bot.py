@@ -1,6 +1,5 @@
 import re
 import os
-from typing import Union
 
 from telebot import TeleBot
 from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton
@@ -84,7 +83,6 @@ class Bot:
 
     def send_contacts(self, chat_id: int, msg: str):
         for email in self.get_emails(msg):
-            print("Contact:", email)
             contact = self.df[self.df["email"].str.contains(email, case=False, na=False)]
             def field(field_name: str) -> str:
                 return contact[field_name].values[0]
@@ -92,26 +90,24 @@ class Bot:
             markup = self.create_contact_markup(email)
             self.bot.send_message(chat_id, f"*{field('name')}*\n{field('position')} @ {field('department')}", reply_markup=markup, parse_mode="markdown")
 
-def create_contact_markup(self, email: str) -> InlineKeyboardMarkup:
-    # Get the contact's Telegram username and phone number from your dataframe (you need to ensure these fields are present in the data)
-    contact = self.df[self.df["email"].str.contains(email, case=False, na=False)]
-    telegram_username = contact["telegram_username"].values[0]
-    phone_number = contact["phone"].values[0]
+    def create_contact_markup(self, email: str) -> InlineKeyboardMarkup:
+        # Get the contact's Telegram username and phone number from your dataframe (you need to ensure these fields are present in the data)
+        contact = self.df[self.df["email"].str.contains(email, case=False, na=False)]
+        phone_number = contact["phone"].values[0]
 
-    # Create URLs to open chat, email, and call apps
-    telegram_url = f"http://t.me/AICentaurBot"  # Telegram deep link - place holder: our bot
-    email_url = f"mailto:{email}"  # Mailto link for opening email client
-    call_url = f"tel:{phone_number}"  # Tel link for opening phone app
+        # Create URLs to open chat, email, and call apps
+        telegram_url = f"https://t.me/AICentaurBot"  # Telegram deep link - place holder: our bot
+        email_url = f"https://ai-hackathon-2024-redirect.j-konratt.workers.dev?email={email}"  # Mailto link for opening email client
+        tel_url = f"https://ai-hackathon-2024-redirect.j-konratt.workers.dev?tel={phone_number}"  # Mailto link for opening email client
 
-    # Create the buttons with URLs
-    markup = InlineKeyboardMarkup(row_width=3)
-    chat_action = InlineKeyboardButton("💬 Chat", url=telegram_url)
-    email_action = InlineKeyboardButton("✉ Email", url=email_url)
-    call_action = InlineKeyboardButton("📞 Call", url=call_url)
-    
-    markup.add(chat_action, email_action, call_action)
-    return markup
+        # Create the buttons with URLs
+        markup = InlineKeyboardMarkup(row_width=3)
+        chat_action = InlineKeyboardButton("💬", url=telegram_url)
+        email_action = InlineKeyboardButton("✉", url=email_url)
+        tel_action = InlineKeyboardButton("📞", url=tel_url)
 
+        markup.add(chat_action, email_action, tel_action)
+        return markup
 
     def start(self):
         print("Bot is running...")
