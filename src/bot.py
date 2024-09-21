@@ -50,12 +50,12 @@ class Bot:
             elif call.data == DISLIKE:
                 self.bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
                 self.bot.send_message(chat_id, self.assistant.negative_feedback(chat_id))
-            elif call.data.startswith(CHAT_PREFIX):
+            """ elif call.data.startswith(CHAT_PREFIX):
                 self.bot.send_message(chat_id, "chat")
             elif call.data.startswith(EMAIL_PREFIX):
                 self.bot.send_message(chat_id, "email")
             elif call.data.startswith(CALL_PREFIX):
-                self.bot.send_message(chat_id, "call")
+                self.bot.send_message(chat_id, "call") """
 
     def process_request(self, chat_id: int, request: str):
         response = self.assistant.process_request(chat_id, request)
@@ -92,13 +92,26 @@ class Bot:
             markup = self.create_contact_markup(email)
             self.bot.send_message(chat_id, f"*{field('name')}*\n{field('position')} @ {field('department')}", reply_markup=markup, parse_mode="markdown")
 
-    def create_contact_markup(self, email: str) -> Union[InlineKeyboardMarkup, None]:
-        markup = InlineKeyboardMarkup(row_width=3)
-        chat_action = InlineKeyboardButton("💬", callback_data=f"{CHAT_PREFIX}{email}")
-        email_action = InlineKeyboardButton("✉", callback_data=f"{EMAIL_PREFIX}{email}")
-        call_action = InlineKeyboardButton("📞", callback_data=f"{CALL_PREFIX}{email}")
-        markup.add(chat_action, email_action, call_action)
-        return markup
+def create_contact_markup(self, email: str) -> InlineKeyboardMarkup:
+    # Get the contact's Telegram username and phone number from your dataframe (you need to ensure these fields are present in the data)
+    contact = self.df[self.df["email"].str.contains(email, case=False, na=False)]
+    telegram_username = contact["telegram_username"].values[0]
+    phone_number = contact["phone"].values[0]
+
+    # Create URLs to open chat, email, and call apps
+    telegram_url = f"http://t.me/AICentaurBot"  # Telegram deep link - place holder: our bot
+    email_url = f"mailto:{email}"  # Mailto link for opening email client
+    call_url = f"tel:{phone_number}"  # Tel link for opening phone app
+
+    # Create the buttons with URLs
+    markup = InlineKeyboardMarkup(row_width=3)
+    chat_action = InlineKeyboardButton("💬 Chat", url=telegram_url)
+    email_action = InlineKeyboardButton("✉ Email", url=email_url)
+    call_action = InlineKeyboardButton("📞 Call", url=call_url)
+    
+    markup.add(chat_action, email_action, call_action)
+    return markup
+
 
     def start(self):
         print("Bot is running...")
