@@ -3,7 +3,7 @@ import tempfile
 import speech_recognition as sr
 from pydub import AudioSegment
 from telebot import TeleBot
-from telebot.types import Voice
+from telebot.types import Voice, User
 
 
 class VoiceRecognizer:
@@ -11,7 +11,8 @@ class VoiceRecognizer:
         self.bot = bot
         self.recognizer = sr.Recognizer()
 
-    def recognize_speech(self, voice: Voice) -> str:
+    def recognize_speech(self, voice: Voice, user: User) -> str:
+        language_code = user.language_code
         with tempfile.NamedTemporaryFile(delete=False, suffix=".ogg") as temp_voice_file:
             file_path = temp_voice_file.name
             wav_file_path = file_path.replace(".ogg", ".wav")
@@ -20,7 +21,7 @@ class VoiceRecognizer:
         audio_data = self.extract_audio_data(file_path, wav_file_path)
 
         try:
-            return self.recognizer.recognize_google(audio_data, language="de-DE")
+            return self.recognizer.recognize_google(audio_data, language=language_code)
         except sr.UnknownValueError:
             return "Entschuldigung, ich kann dich nicht verstehen."
         except sr.RequestError as e:
