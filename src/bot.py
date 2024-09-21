@@ -38,7 +38,7 @@ class Bot:
 
         @self.bot.message_handler(func=lambda msg: True, content_types=["voice"])
         def handle_voice(message: Message):
-            self.process_request(message.chat.id, self.voice_recognizer.recognize_speech(message.voice))
+            self.process_request(message.chat.id, self.voice_recognizer.recognize_speech(message.voice, message.from_user))
 
         @self.bot.callback_query_handler(func=lambda call: True)
         def handle_feedback_buttons(call):
