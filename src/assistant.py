@@ -1,5 +1,6 @@
 import json
 from enum import Enum
+from telebot.types import User
 from openai import OpenAI
 from openai.types.beta.threads.run import Run
 from typing import TypedDict, Literal
@@ -14,6 +15,25 @@ class Assistant:
         self.assistant = self.client.beta.assistants.create(instructions=instruction, model=model, tools=tools)
         self.states: dict[int, AssistantStatus] = {}
         self.df = get_df()
+
+    def greet_user(self, chat_id: int, user: User) -> str:
+        self.set_idle(chat_id)
+        run = self.client.beta.threads.runs.create_and_poll(
+            thread_id=self.get_thread(chat_id),
+            assistant_id=self.assistant.id,
+            instructions=f"Greet the user '{self.get_name(user)}'. It is important to use the language '{user.language_code}' for the greeting."
+        )
+        return self.handle_run(chat_id, run)
+
+    def get_name(self, user: User) -> str:
+        if user.full_name:
+            return user.full_name
+        if user.first_name:
+            name = user.first_name
+            if user.last_name:
+                name += " " + user.last_name
+            return name
+        return user.username
 
     def process_request(self, chat_id: int, request: str) -> str:
         if chat_id not in self.states:

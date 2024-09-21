@@ -21,7 +21,7 @@ class Bot:
         @self.bot.message_handler(commands=["start", "hello", "init"])
         def send_welcome(message: Message):
             chat_id = message.chat.id
-            self.bot.send_message(chat_id, "Howdy, how are you doing?")
+            self.bot.send_message(chat_id, self.assistant.greet_user(chat_id, message.from_user))
 
         @self.bot.message_handler(func=lambda msg: True)
         def handle_text(message: Message):
