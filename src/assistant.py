@@ -40,12 +40,10 @@ class Assistant:
             self.set_idle(chat_id)
 
         status = self.get_status(chat_id)
-        if status == Assistant.Status.Idle:
-            return self.process_idle(chat_id, request)
-        elif status == Assistant.Status.Processing:
+        if status == Assistant.Status.Processing:
             return self.process_clarification(chat_id, request)
         else:
-            return "..."
+            return self.process_idle(chat_id, request)
 
     def process_idle(self, chat_id: int, request: str) -> str:
         self.states[chat_id]["status"] = Assistant.Status.Processing
@@ -99,9 +97,6 @@ class Assistant:
         responsibility = parameters["responsibility"] if "responsibility" in parameters else None
         program = parameters["program"] if "program" in parameters else None
         location = parameters["location"] if "location" in parameters else None
-
-        if int(bool(department)) + int(bool(position)) + int(bool(responsibility)) + int(bool(program)) + int(bool(location)) < 2:
-            return "Please provide more information."
 
         df = self.df.copy()
         # Apply department filter
