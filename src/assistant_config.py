@@ -35,7 +35,7 @@ tools = [
                         "description": "The program which is related to the issue."
                     }
                 },
-                "required": ["department", "position", "responsibility"]
+                "required": []
             }
         }
     }
