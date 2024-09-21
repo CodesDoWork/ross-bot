@@ -33,6 +33,11 @@ tools = [
                         "type": "string",
                         "enum": list(df.programs.str.split(", ").explode().dropna().unique()),
                         "description": "The program which is related to the issue."
+                    },
+                    "location": {
+                        "type": "string",
+                        "enum": list(df.location.unique()),
+                        "description": "The location where the contact person should be located."
                     }
                 },
                 "required": []

@@ -22,13 +22,13 @@ class Assistant:
         status = self.get_status(chat_id)
         if status == Assistant.Status.Idle:
             return self.process_idle(chat_id, request)
-        elif status == Assistant.Status.Clarification:
+        elif status == Assistant.Status.Processing:
             return self.process_clarification(chat_id, request)
         else:
             return "..."
 
     def process_idle(self, chat_id: int, request: str) -> str:
-        self.states[chat_id]["status"] = Assistant.Status.Clarification
+        self.states[chat_id]["status"] = Assistant.Status.Processing
         return self.process_clarification(chat_id, request)
 
     def process_clarification(self, chat_id: int, request: str) -> str:
@@ -71,7 +71,7 @@ class Assistant:
             tool_outputs=tool_outputs
         )
 
-        self.set_idle(chat_id)
+        self.set_feedback(chat_id)
         return self.handle_run(chat_id, tool_run)
 
     def get_relevant_people(self, parameters: dict) -> str:
@@ -79,27 +79,78 @@ class Assistant:
         position = parameters["position"] if "position" in parameters else None
         responsibility = parameters["responsibility"] if "responsibility" in parameters else None
         program = parameters["program"] if "program" in parameters else None
+        location = parameters["location"] if "location" in parameters else None
 
-        print(parameters)
-
-        df = self.df
+        df = self.df.copy()
+        # Apply department filter
         if department:
-            df = df[df["department"] == department]
-        if position:
-            df = df[df["position"] == position]
-        if responsibility:
-            df = df[df["responsibilities"].str.contains(responsibility)]
-        if program:
-            df = df[df["programs"].dropna().str.contains(program)]
+            filtered_df = df[df["department"] == department]
+            if not filtered_df.empty:
+                df = filtered_df
 
-        relevant_people = map(lambda row: f"- Name: {row["name"]}, Email: {row['email']}, Phone: {row['phone']}, Responsibility: {row['description']}", df)
-        print(relevant_people)
+        # Apply position filter
+        if position:
+            filtered_df = df[df["position"] == position]
+            if not filtered_df.empty:
+                df = filtered_df
+
+        # Apply responsibility filter
+        if responsibility:
+            filtered_df = df[df["responsibilities"].str.contains(responsibility)]
+            if not filtered_df.empty:
+                df = filtered_df
+
+        # Apply program filter
+        if program:
+            filtered_df = df[df["programs"].dropna().str.contains(program)]
+            if not filtered_df.empty:
+                df = filtered_df
+
+        # Apply location filter
+        if location:
+            filtered_df = df[df["location"] == location]
+            if not filtered_df.empty:
+                df = filtered_df
+
+        relevant_people = list(map(lambda row: f"Name: {row["name"]}, Email: {row['email']}, Phone: {row['phone']}, Responsibility: {row['description']}", df.iloc))
 
         return "Relevant people:\n- " + "\n- ".join(relevant_people)
+
+    def ask_for_feedback(self, chat_id: int) -> str:
+        run = self.client.beta.threads.runs.create_and_poll(
+            thread_id=self.get_thread(chat_id),
+            assistant_id=self.assistant.id,
+            instructions="Ask the user if he is satisfied."
+        )
+        return self.handle_run(chat_id, run)
+
+    def positive_feedback(self, chat_id: int) -> str:
+        self.set_idle(chat_id)
+        run = self.client.beta.threads.runs.create_and_poll(
+            thread_id=self.get_thread(chat_id),
+            assistant_id=self.assistant.id,
+            instructions="The user is satisfied. Say goodbye to them and thank them."
+        )
+        return self.handle_run(chat_id, run)
+
+    def negative_feedback(self, chat_id: int) -> str:
+        self.set_processing(chat_id)
+        run = self.client.beta.threads.runs.create_and_poll(
+            thread_id=self.get_thread(chat_id),
+            assistant_id=self.assistant.id,
+            instructions="The user is unsatisfied. Be sorry. Think about how to improve and ask for clarification."
+        )
+        return self.handle_run(chat_id, run)
 
     def set_idle(self, chat_id: int):
         thread = self.client.beta.threads.create()
         self.states[chat_id] = {"status": Assistant.Status.Idle, "thread": thread.id}
+
+    def set_processing(self, chat_id: int):
+        self.states[chat_id]["status"] = Assistant.Status.Processing
+
+    def set_feedback(self, chat_id: int):
+        self.states[chat_id]["status"] = Assistant.Status.Feedback
 
     def get_status(self, chat_id: int) -> "Assistant.Status":
         return self.states[chat_id]["status"]
@@ -109,8 +160,8 @@ class Assistant:
 
     class Status(Enum):
         Idle = 0
-        Clarification = 1
-        Processing = 2
+        Processing = 1
+        Feedback = 2
 
 
 class AssistantStatus(TypedDict):
