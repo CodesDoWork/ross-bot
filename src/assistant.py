@@ -1,20 +1,20 @@
 import json
+from pandas import DataFrame
 from enum import Enum
 from telebot.types import User
 from openai import OpenAI
 from openai.types.beta.threads.run import Run
 from typing import TypedDict, Literal
 from src.assistant_config import instruction, model, tools
-from src.data import get_df
 
 
 class Assistant:
 
-    def __init__(self):
+    def __init__(self, df: DataFrame):
         self.client = OpenAI()
         self.assistant = self.client.beta.assistants.create(instructions=instruction, model=model, tools=tools)
         self.states: dict[int, AssistantStatus] = {}
-        self.df = get_df()
+        self.df = df
 
     def greet_user(self, chat_id: int, user: User) -> str:
         self.set_idle(chat_id)
@@ -91,7 +91,6 @@ class Assistant:
             tool_outputs=tool_outputs
         )
 
-        self.set_feedback(chat_id)
         return self.handle_run(chat_id, tool_run)
 
     def get_relevant_people(self, parameters: dict) -> str:
@@ -100,6 +99,9 @@ class Assistant:
         responsibility = parameters["responsibility"] if "responsibility" in parameters else None
         program = parameters["program"] if "program" in parameters else None
         location = parameters["location"] if "location" in parameters else None
+
+        if int(bool(department)) + int(bool(position)) + int(bool(responsibility)) + int(bool(program)) + int(bool(location)) < 2:
+            return "Please provide more information."
 
         df = self.df.copy()
         # Apply department filter
@@ -133,6 +135,8 @@ class Assistant:
                 df = filtered_df
 
         relevant_people = list(map(lambda row: f"Name: {row["name"]}, Email: {row['email']}, Phone: {row['phone']}, Responsibility: {row['description']}", df.iloc))
+        if len(relevant_people) > 3:
+            return "Please provide more information."
 
         return "Relevant people:\n- " + "\n- ".join(relevant_people)
 
@@ -140,7 +144,7 @@ class Assistant:
         run = self.client.beta.threads.runs.create_and_poll(
             thread_id=self.get_thread(chat_id),
             assistant_id=self.assistant.id,
-            instructions="Ask the user if he is satisfied."
+            instructions="Ask if the user is satisfied with your response."
         )
         return self.handle_run(chat_id, run)
 
@@ -149,7 +153,7 @@ class Assistant:
         run = self.client.beta.threads.runs.create_and_poll(
             thread_id=self.get_thread(chat_id),
             assistant_id=self.assistant.id,
-            instructions="The user is satisfied. Say goodbye to them and thank them."
+            instructions="The user is satisfied. Say goodbye and thank them."
         )
         return self.handle_run(chat_id, run)
 
