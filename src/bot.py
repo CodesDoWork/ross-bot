@@ -105,7 +105,7 @@ class Bot:
         :param text: Input text to search for email addresses.
         :return: A list of email addresses found in the text.
         """
-        return re.findall(fr"[\w._-]+@{self.domain}", text)
+        return list(set(re.findall(fr"[\w._-]+@{self.domain}", text)))
 
     def is_contact_response(self, msg: str) -> bool:
         """

@@ -170,38 +170,46 @@ class Assistant:
         program = parameters["program"] if "program" in parameters else None
         location = parameters["location"] if "location" in parameters else None
 
+        print(f"department: {department}, position: {position}, responsibility: {responsibility}, program: {program}, location: {location}")
+
         df = self.df.copy()
         # Apply department filter
         if department:
             filtered_df = df[df["department"] == department]
             if not filtered_df.empty:
                 df = filtered_df
+                print("Used filter department")
 
         # Apply position filter
         if position:
             filtered_df = df[df["position"] == position]
             if not filtered_df.empty:
                 df = filtered_df
+                print("Used filter position")
 
         # Apply responsibility filter
         if responsibility:
             filtered_df = df[df["responsibilities"].str.contains(responsibility)]
             if not filtered_df.empty:
                 df = filtered_df
+                print("Used filter responsibility")
 
         # Apply program filter
         if program:
             filtered_df = df[df["programs"].dropna().str.contains(program)]
             if not filtered_df.empty:
                 df = filtered_df
+                print("Used filter program")
 
         # Apply location filter
         if location:
             filtered_df = df[df["location"] == location]
             if not filtered_df.empty:
                 df = filtered_df
+                print("Used filter location")
 
-        relevant_people = list(map(lambda row: f"Name: {row['name']}, Email: {row['email']}, Phone: {row['phone']}, Responsibility: {row['description']}", df.iloc))
+        relevant_people = list(map(lambda row: f"Name: {row['name']}, Email: {row['email']}, Department: {row['department']}, Position: {row['position']}, Programs: {row['programs']}, Responsibility: {row['description']}", df.iloc))
+        print(relevant_people)
         if len(relevant_people) > 3:
             return "Please provide more information."
 
@@ -217,7 +225,7 @@ class Assistant:
         run = self.client.beta.threads.runs.create_and_poll(
             thread_id=self.get_thread(chat_id),
             assistant_id=self.assistant.id,
-            instructions="Ask if the user is satisfied with your response. He should be able to answer with yes if he is satisfied and no if he is not."
+            instructions="Ask if the user is satisfied with your response. Do not ask if he needs further information."
         )
         return self.handle_run(chat_id, run)
 
