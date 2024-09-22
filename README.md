@@ -1,7 +1,7 @@
 
-# AICentaurBot: Telegram Chat Bot for Finding the Right Contact Person within Rossmann
+# RossBot: Telegram Chat Bot for Finding the Right Contact Person within Rossmann
 
-AICentaurBot is a Telegram bot designed to provide voice recognition and assistance based on user requests. The bot can handle text, voice commands, and retrieve relevant contact information from a dataset. The bot leverages the OpenAI API to process user input and respond intelligently based on user queries.
+RossBot is a Telegram bot designed to provide voice recognition and assistance based on user requests. The bot can handle text, voice commands, and retrieve relevant contact information from a dataset. It leverages the OpenAI API to process user input and respond intelligently based on user queries.
 
 ## Features
 
@@ -14,7 +14,7 @@ AICentaurBot is a Telegram bot designed to provide voice recognition and assista
 
 ### Prerequisites
 
-To run the AICentaurBot locally, you need the following:
+To run the bot locally, you need the following:
 
 - Python 3.8 or higher
 - A Telegram account
@@ -49,28 +49,28 @@ ffmpeg -version
 ### Installation
 
 1. **Clone the repository**:
-   \`\`\`bash
+   ```bash
    git clone https://github.com/CodesDoWork/ross-bot
-   \`\`\`
+   ```
 
 2. **Install dependencies**:
    Install the required libraries by running:
-   \`\`\`bash
+   ```bash
    pip install -r requirements.txt
-   \`\`\`
+   ```
 
 3. **Create a `.env` file**:
    Create a `.env` file to store your bot token and OpenAI API key. The file should look like this:
-   \`\`\`bash
+   ```bash
    BOT_TOKEN=<your-telegram-bot-token>
    OPENAI_API_KEY=<your-openai-api-key>
-   \`\`\`
+   ```
 
 4. **Run the bot**:
    Start the bot by running:
-   \`\`\`bash
+   ```bash
    python src/main.py
-   \`\`\`
+   ```
 
 ### Customization
 
