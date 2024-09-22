@@ -1,2 +1,6 @@
+openai==1.47.0
+pandas==2.2.3
+pydub==0.25.1
 pyTelegramBotAPI==4.22.1
 python-dotenv==1.0.1
+SpeechRecognition==3.10.4
