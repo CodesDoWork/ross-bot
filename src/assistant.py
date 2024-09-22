@@ -139,7 +139,7 @@ class Assistant:
         run = self.client.beta.threads.runs.create_and_poll(
             thread_id=self.get_thread(chat_id),
             assistant_id=self.assistant.id,
-            instructions="Ask if the user is satisfied with your response."
+            instructions="Ask if the user is satisfied with your response. He should be able to answer with yes if he is satisfied and no if he is not."
         )
         return self.handle_run(chat_id, run)
 
