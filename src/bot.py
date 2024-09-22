@@ -76,7 +76,7 @@ class Bot:
         return markup
 
     def get_emails(self, text: str) -> list[str]:
-        return re.findall(fr"[\w.-_]+@{self.domain}", text)
+        return re.findall(fr"[\w._-]+@{self.domain}", text)
 
     def is_contact_response(self, msg: str) -> bool:
         return len(self.get_emails(msg)) > 0
