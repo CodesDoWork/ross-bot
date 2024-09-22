@@ -7,3 +7,4 @@ services:
       - OPENAI_API_KEY
       - BOT_TOKEN
     image: docker.justinkonratt.com/codesdowork/ross-bot
+    restart: always

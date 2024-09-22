@@ -3,7 +3,7 @@ FROM python:3.11-alpine
 WORKDIR /app
 
 RUN apk upgrade
-RUN apk add --no-cache ffmpeg
+RUN apk add --no-cache ffmpeg flac
 
 COPY requirements.txt requirements.txt
 RUN pip install -r requirements.txt
