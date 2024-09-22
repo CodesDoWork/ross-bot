@@ -1,6 +1,9 @@
 services:
   ross-bot:
+    build: .
     cap_drop:
       - ALL
-    build: .
+    environment:
+      - OPENAI_API_KEY
+      - BOT_TOKEN
     image: docker.justinkonratt.com/codesdowork/ross-bot

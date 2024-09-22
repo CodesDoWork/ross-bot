@@ -10,6 +10,5 @@ RUN pip install -r requirements.txt
 
 COPY res res
 COPY src src
-COPY .env .env
 
-ENTRYPOINT ["python", "src/main.py"]
+ENTRYPOINT ["python", "-m", "src.main"]

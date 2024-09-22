@@ -1,4 +1,4 @@
-from data import get_df
+from src.data import get_df
 
 
 df = get_df()
