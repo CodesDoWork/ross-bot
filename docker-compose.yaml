@@ -1,0 +1,6 @@
+services:
+  ross-bot:
+    cap_drop:
+      - ALL
+    build: .
+    image: docker.justinkonratt.com/codesdowork/ross-bot

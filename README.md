@@ -19,7 +19,7 @@ To run the bot locally, you need the following:
 - Python 3.8 or higher
 - A Telegram account
 - A bot token from [Telegram BotFather](https://core.telegram.org/bots#botfather)
-- An OpenAI API key (for handling complex requests)
+- An OpenAI API key
 
 ### Install FFmpeg
 
@@ -79,7 +79,9 @@ You can customize your Telegram experience by applying a custom color scheme. He
 
 - Open Telegram on your phone or desktop.
 - Navigate to **Settings** > **Chat Settings**.
-- Scroll down to **Change Chat Background** and choose a custom color scheme or apply the one provided with this code.
+- Scroll down to **Change Chat Background** and choose a custom color scheme or apply the one [provided](./theme/RossBot.attheme).
+
+Or use the following link: https://t.me/addtheme/OvOI6tBSrNnNCAXE
 
 #### 2. **Disable Telegram's In-App Browser**:
 To ensure that links (e.g., email or phone actions) are properly opened by external apps (and not within Telegram's browser), follow these steps:
@@ -104,4 +106,4 @@ To search for and add the bot to your Telegram account, follow these steps:
 
 ### License
 
-This project is licensed under the MIT License. See the `LICENSE` file for more details.
+This project is licensed under the MIT License. See the [`LICENSE`](./LICENSE) file for more details.

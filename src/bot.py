@@ -1,25 +1,12 @@
-"""
-This script implements a Telegram bot using the TeleBot library. The bot provides several functionalities, including:
-1. Responding to commands and text messages.
-2. Processing voice messages via a voice recognition system.
-3. Identifying and sending contact information based on user requests, such as email addresses.
-4. Allowing users to interact with the bot through inline buttons for feedback (like/dislike).
-5. Presenting options for chatting, emailing, or calling contacts through custom keyboard actions.
+import re
+import os
 
-The bot uses the `Assistant` class to handle responses and the `VoiceRecognizer` class to process speech. It retrieves contact information from a dataframe and provides the user with buttons for interacting with specific contacts (e.g., starting a Telegram chat, sending an email, or making a phone call).
-"""
-
-import re  # Regular expressions for pattern matching, especially for extracting emails from text.
-import os  # For accessing environment variables, such as the bot token.
-
-# Importing necessary modules from the Telebot library for bot creation and interaction
 from telebot import TeleBot  
 from telebot.types import Message, InlineKeyboardMarkup, InlineKeyboardButton  
 
-# Importing custom classes from the src directory for assisting with bot tasks
-from src.assistant import Assistant  # Handles assistant-related tasks (like greeting users, processing requests).
-from src.voice import VoiceRecognizer  # Manages voice recognition features for the bot.
-from src.data import get_df  # Loads the dataframe containing the contact information.
+from src.assistant import Assistant
+from src.voice import VoiceRecognizer
+from src.data import get_df
 
 # Constants used to handle feedback and contact actions
 LIKE = "like"  # Feedback constant for positive feedback
@@ -34,67 +21,47 @@ class Bot:
 
     def __init__(self, domain: str, token: str = ""):
         """
-        Initializes the bot with a domain (for filtering email contacts) and a token for authentication.
+        Initializes the bot with a domain (for filtering email contacts) and a teelegram token for authentication.
 
         :param domain: The email domain for filtering contacts.
-        :param token: Optional; the bot token, fetched from the environment if not provided.
+        :param token: Optional; the bot token, fetched from the environment `BOT_TOKEN` if not provided.
         """
-        # Create a TeleBot instance. If a token isn't provided, fetch it from the environment variables.
         self.bot = TeleBot(token or os.getenv("BOT_TOKEN"))
 
-        # Set up handlers for different message and callback events.
         self.setup_handlers()
 
-        # Load contact data from the dataframe and initialize assistant and voice recognizer.
         self.df = get_df()
-        self.assistant = Assistant(self.df)  # Assistant to help process user requests.
-        self.voice_recognizer = VoiceRecognizer(self.bot)  # Voice recognizer for handling voice messages.
-        self.domain = domain  # Email domain to match contacts.
+        self.assistant = Assistant(self.df)
+        self.voice_recognizer = VoiceRecognizer(self.bot)
+        self.domain = domain
 
     def setup_handlers(self):
         """
         Defines and registers the bot's message and callback query handlers.
         """
-        # Handler for start/init commands. Sends a welcome message when "/start", "/hello", or "/init" commands are received.
         @self.bot.message_handler(commands=["start", "hello", "init"])
         def send_welcome(message: Message):
             chat_id = message.chat.id
-            # Sends a personalized greeting to the user based on their Telegram ID.
             self.bot.send_message(chat_id, self.assistant.greet_user(chat_id, message.from_user))
 
-        # Handler for any text message. This is a catch-all handler that processes any incoming text.
         @self.bot.message_handler(func=lambda msg: True)
         def handle_text(message: Message):
             self.process_request(message.chat.id, message.text)
 
-        # Handler for voice messages. It captures the audio, converts it to text, and processes the request.
         @self.bot.message_handler(func=lambda msg: True, content_types=["voice"])
         def handle_voice(message: Message):
-            # Recognizes the voice message and processes it as a text request.
             self.process_request(message.chat.id, self.voice_recognizer.recognize_speech(message.voice, message.from_user))
 
-        # Handler for button clicks (like/dislike feedback). Handles the feedback from the user.
         @self.bot.callback_query_handler(func=lambda call: True)
         def handle_feedback_buttons(call):
-            self.bot.answer_callback_query(call.id)  # Acknowledge the button click.
+            self.bot.answer_callback_query(call.id)
             chat_id = call.message.chat.id
             if call.data == LIKE:
-                # Removes the markup (buttons) after the user provides positive feedback.
                 self.bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
                 self.bot.send_message(chat_id, self.assistant.positive_feedback(chat_id))
             elif call.data == DISLIKE:
-                # Removes the markup (buttons) after the user provides negative feedback.
                 self.bot.edit_message_reply_markup(chat_id, call.message.message_id, reply_markup=None)
                 self.bot.send_message(chat_id, self.assistant.negative_feedback(chat_id))
-            """ The following block of code is commented out because it seems to deal with chat, email, or call responses
-                which may not be currently implemented.
-            elif call.data.startswith(CHAT_PREFIX):
-                self.bot.send_message(chat_id, "chat")
-            elif call.data.startswith(EMAIL_PREFIX):
-                self.bot.send_message(chat_id, "email")
-            elif call.data.startswith(CALL_PREFIX):
-                self.bot.send_message(chat_id, "call") 
-            """
 
     def process_request(self, chat_id: int, request: str):
         """
@@ -103,13 +70,13 @@ class Bot:
         :param chat_id: ID of the chat where the request came from.
         :param request: The user's message or recognized speech.
         """
-        response = self.assistant.process_request(chat_id, request)  # Assistant processes the request.
-        if self.is_contact_response(response):  # Checks if the response contains contact details.
-            self.send_contacts(chat_id, response)  # Sends contact information if present.
-            self.assistant.set_feedback(chat_id)  # Prepares for collecting feedback from the user.
-            self.ask_for_feedback(chat_id)  # Ask the user for feedback (like/dislike).
+        response = self.assistant.process_request(chat_id, request)
+        if self.is_contact_response(response):
+            self.send_contacts(chat_id, response)
+            self.assistant.set_feedback(chat_id)
+            self.ask_for_feedback(chat_id)
         else:
-            self.bot.send_message(chat_id, response)  # Sends a non-contact response message.
+            self.bot.send_message(chat_id, response)
 
     def ask_for_feedback(self, chat_id: int):
         """
@@ -138,7 +105,7 @@ class Bot:
         :param text: Input text to search for email addresses.
         :return: A list of email addresses found in the text.
         """
-        return re.findall(fr"[\w._-]+@{self.domain}", text)  # Uses regular expressions to find emails matching the domain.
+        return re.findall(fr"[\w._-]+@{self.domain}", text)
 
     def is_contact_response(self, msg: str) -> bool:
         """
@@ -157,13 +124,12 @@ class Bot:
         :param msg: The message containing contact information.
         """
         for email in self.get_emails(msg):
-            contact = self.df[self.df["email"].str.contains(email, case=False, na=False)]  # Finds the contact info from the dataframe.
+            contact = self.df[self.df["email"].str.contains(email, case=False, na=False)]
             
             def field(field_name: str) -> str:
-                return contact[field_name].values[0]  # Helper function to fetch field values from the dataframe.
+                return contact[field_name].values[0]
 
-            markup = self.create_contact_markup(email)  # Creates contact action buttons (chat, email, call).
-            # Sends the contact's name, position, and department in a markdown formatted message.
+            markup = self.create_contact_markup(email)
             self.bot.send_message(chat_id, f"*{field('name')}*\n{field('position')} @ {field('department')}", reply_markup=markup, parse_mode="markdown")
 
     def create_contact_markup(self, email: str) -> InlineKeyboardMarkup:
@@ -173,16 +139,14 @@ class Bot:
         :param email: The email of the contact.
         :return: InlineKeyboardMarkup with buttons for chat, email, and call.
         """
-        contact = self.df[self.df["email"].str.contains(email, case=False, na=False)]  # Finds the contact.
-        phone_number = contact["phone"].values[0]  # Retrieves the phone number.
+        contact = self.df[self.df["email"].str.contains(email, case=False, na=False)]
+        phone_number = contact["phone"].values[0]
 
-        # URLs for chat, email, and phone actions.
         telegram_url = f"https://t.me/AICentaurBot"  # Telegram deep link (placeholder).
-        email_url = f"https://ai-hackathon-2024-redirect.j-konratt.workers.dev?email={email}"  # Email client link.
-        tel_url = f"https://ai-hackathon-2024-redirect.j-konratt.workers.dev?tel={phone_number}"  # Phone call link.
+        email_url = f"https://ai-hackathon-2024-redirect.j-konratt.workers.dev?email={email}"
+        tel_url = f"https://ai-hackathon-2024-redirect.j-konratt.workers.dev?tel={phone_number}"
 
-        # Create the buttons for the chat, email, and call actions.
-        markup = InlineKeyboardMarkup(row_width=3)  # Three buttons in a row.
+        markup = InlineKeyboardMarkup(row_width=3)
         chat_action = InlineKeyboardButton("💬", url=telegram_url)
         email_action = InlineKeyboardButton("✉", url=email_url)
         tel_action = InlineKeyboardButton("📞", url=tel_url)
@@ -195,4 +159,4 @@ class Bot:
         Starts the bot's event loop, waiting for messages and handling interactions indefinitely.
         """
         print("Bot is running...")
-        self.bot.infinity_polling()  # Starts the bot's polling mechanism for handling updates.
+        self.bot.infinity_polling()
